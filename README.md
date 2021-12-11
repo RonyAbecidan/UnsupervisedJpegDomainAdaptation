@@ -31,7 +31,7 @@ described in the paper. The training relative to the SrcOnly setup is on the lef
 **Don't hesitate to click on the gif below to see it better !**
 
 
-![](https://s10.gifyu.com/images/Adaptationf80f69ab9e1dfcaa.gif)
+![](./adaptation.gif)
 
 - As you can observe, in the **SrcOnly** setup, the forgery detector is more and more prone to false alarms, certainly because compressing images to QF5 results in creating artifacts in the high frequencies that can be misinterpreted by the model. However, it has no real difficulty to identify correctly the forged images.
 
