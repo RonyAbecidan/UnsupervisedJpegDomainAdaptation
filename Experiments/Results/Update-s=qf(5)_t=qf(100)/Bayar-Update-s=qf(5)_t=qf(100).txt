@@ -1,0 +1,39 @@
+
+    === FORGERY DETECTION TASK ===
+    source : qf(5)
+    target : qf(100)
+    
+   --- DATA ---
+    source : random half images sampled from the "Splicing" category of the database DEFACTO
+    repartition : 1-1/3 1/3
+    
+    A 3-fold cutting is applied to the source to split it into 3 train and test sets
+    Then, the images in each cuts are transformed into batches of 128x128 patches.
+    
+    **In each set, there is a perfect balance between forged and non-forged patches : **
+    
+    -A patch associated to a forged region is kept in the sets only if the forged region occupy a space between 20% and 80% 
+    of the total space (128x128). 
+    -The real patches are chosen randomly so that there is an equal amount of forged and non-forged
+    patches.
+    -We kept only 2 patches for each class at maximum by image
+    
+    target : other half of the images from the "Splicing" category of the database DEFACTO and potentially presenting a different preprocessing compared to the source 
+    (for instance a change in the quality factor for the compression).
+    repartition : 1-1/3 1/3
+    
+    The preprocessing of the target images is the same as the one presented above
+   
+    --- TRAINING ---
+    trainings_epochs on each fold : 30
+    hyperparameters_file : hyperparameters-Update-s=qf(5)_t=qf(100).txt
+    
+    --- RESULTS --- 
+
+    
+qf(5) : 81.5% +/- 0.0%
+qf(10) : 82.19999999999999% +/- 0.0%
+qf(20) : 81.6% +/- 0.0%
+qf(50) : 81.3% +/- 0.0%
+qf(100) : 81.0% +/- 0.0%
+none : 81.3% +/- 0.0%
