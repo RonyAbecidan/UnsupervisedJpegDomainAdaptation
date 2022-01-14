@@ -50,6 +50,7 @@ def return_filenames(folder_name):
     return filenames
 
 img_folder='img'
+mask_folder='probe_mask'
 addrs=return_filenames(img_folder)
 
 def is_genuine(mask):
