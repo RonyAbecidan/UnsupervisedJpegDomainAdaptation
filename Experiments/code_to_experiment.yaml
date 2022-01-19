@@ -1,0 +1,14 @@
+0: SrcOnly-s=none_t=qf(5)
+1: SrcOnly-s=qf(5)_t=qf(5)
+2: SrcOnly-s=qf(5)_t=qf(5)_N_s=1000
+3: SrcOnly-s=qf(100)_t=qf(5)
+4: Update-s=none_t=qf(5)
+5: Update-s=none_t=qf(5)_N_t=10
+6: Update-s=none_t=qf(5)_N_t=100
+7: Update-s=none_t=qf(5)_N_t=1000
+8: Update-s=none_t=qf(5)_sigma=0.01
+9: Update-s=none_t=qf(5)_sigma=1000
+10: Update-s=qf(100)_t=qf(5)
+11: Update-s=qf(5)_t=qf(100)
+12: Mix-s=none_t=qf(5)
+13: Mix-s=qf(100)_t=qf(5)

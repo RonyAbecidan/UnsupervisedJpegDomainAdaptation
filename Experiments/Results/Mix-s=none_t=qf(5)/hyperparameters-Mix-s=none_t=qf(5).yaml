@@ -1,0 +1,37 @@
+seed: 2021
+N_fold: 3
+im_size: 128
+detector_name: Bayar
+precisions: s=none_t=qf(5)
+source:
+  filename: source-none.hdf5
+  max_size: 1000000000
+  name: none
+target:
+  filename: target-qf(5).hdf5
+  max_size: 1000000000
+  name: qf(5)
+training:
+  setup: Mix
+  max_epochs: 30
+  earlystop_patience: 5
+  lr: 0.0001
+  batch_size: 128
+  save_at_each_epoch: false
+  lamb: 0
+eval:
+  batch_size: 512
+  domain_filenames:
+  - target-qf(5).hdf5
+  - target-qf(10).hdf5
+  - target-qf(20).hdf5
+  - target-qf(50).hdf5
+  - target-qf(100).hdf5
+  - target-none.hdf5
+  domain_names:
+  - qf(5)
+  - qf(10)
+  - qf(20)
+  - qf(50)
+  - qf(100)
+  - none

@@ -4,3 +4,4 @@ opencv_python==4.5.4.58
 pytorch_lightning==1.5.0
 scikit_learn==1.0.1
 tqdm==4.62.3
+pyyaml

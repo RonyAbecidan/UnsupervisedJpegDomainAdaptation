@@ -1,23 +1,22 @@
 import os
 import torch
 import numpy as np
+import yaml
+from pathlib import Path
 import gc
-from torch import nn
 
+from torch import nn
 from torch.utils.data import Subset
 from torch.utils.data import DataLoader, ConcatDataset
-
-from pytorch_lightning.callbacks.early_stopping import EarlyStopping
-
 #Tools for creating a Dataloader
 from torch.utils.data import TensorDataset, DataLoader
 
 import pytorch_lightning as pl
+from pytorch_lightning import seed_everything
+from pytorch_lightning import Trainer
+from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 
 from utils import *
-
-from pytorch_lightning import Trainer
-from pytorch_lightning import seed_everything
 
 if not os.path.isdir(f"Results"):
         os.mkdir(f"Results")
@@ -27,13 +26,11 @@ targets=[f'target-{domain}.hdf5' for domain in ['qf(5)','qf(10)','qf(20)','qf(50
 
 print(device)
 
-
 class MyEarlyStopping(EarlyStopping):
 
     def on_train_epoch_end(self, trainer, pl_module):
          trainer.model.validation()
          self._run_early_stopping_check(trainer)
-
 
 class ForgeryDetector(pl.LightningModule):
 
@@ -51,19 +48,20 @@ class ForgeryDetector(pl.LightningModule):
         self.epoch_count = 0
         self.cpt = 0
         self.train_count = 0
-        self.lamb = self.hyperparameters.setdefault('lamb', 0)
-        self.lr = self.hyperparameters.setdefault('lr', 10 ** (-3))
+        self.lamb = self.hyperparameters['training'].setdefault('lamb', 0)
+        self.lr = self.hyperparameters['training'].setdefault('lr', 10 ** (-3))
 
-        self.folder_path=f"{hyperparameters['setup']}-{hyperparameters['precisions']}"
+        self.folder_path=f"{hyperparameters['training']['setup']}-{hyperparameters['precisions']}"
 
 
-        if self.hyperparameters['setup']=='Update':
-            assert ('sigmas' in hyperparameters), "You should precise the bandwiths parameters in hyperparameters['sigmas'] " \
-                                                         " if you want to test the adaptation using the MMD with gaussian kernels (Liu, 2015)"
+        if self.hyperparameters['training']['setup']=='Update':
+            assert ('sigmas' in self.hyperparameters['training']), "You should precise the bandwiths parameters in the yaml file hyperparameters.yaml " \
+                                                         " if you want to test the adaptation using the MMD with gaussian kernels (Liu, 2015) " \
+                                                         " \n hyperparameters->training->sigmas"
 
-            self.sigmas = self.hyperparameters['sigmas']
+            self.sigmas = self.hyperparameters['training']['sigmas']
 
-            self.alpha=self.hyperparameters.setdefault('alpha',0.5)
+            self.alpha=self.hyperparameters['training'].setdefault('alpha',0.5)
 
 
     # Forward Pass of Model
@@ -142,10 +140,10 @@ class ForgeryDetector(pl.LightningModule):
                 images_target, labels_target = next(self.it)
                 images_target,labels_target=images_target.to(device),labels_target.to(device)
 
-        if (self.hyperparameters['setup']=='SrcOnly') or (self.hyperparameters['setup']=='Mix'):
+        if (self.hyperparameters['training']['setup']=='SrcOnly') or (self.hyperparameters['training']['setup']=='Mix'):
             total_loss=SrcOnly(self, data=[images_source,labels_source,images_target,labels_target])
 
-        if self.hyperparameters['setup']=='Update':
+        if self.hyperparameters['training']['setup']=='Update':
             total_loss=Adaptation_with_MMD(self, data=[images_source,labels_source,images_target,labels_target])
 
         output ={'loss': total_loss}
@@ -166,20 +164,20 @@ class ForgeryDetector(pl.LightningModule):
                 self.s_test=self.source_test_accuracy
                 # self.best_val_loss=self.val_loss
                 print(f'Current best : {self.target_test_accuracy}')
-                torch.save(self.state_dict(), f"./Results/{self.folder_path}/{self.hyperparameters['setup']}-best_model.pt")
+                torch.save(self.state_dict(), f"./Results/{self.folder_path}/{self.hyperparameters['training']['setup']}-best_model.pt")
 
-            if self.hyperparameters['save_at_each_epoch']:
-                torch.save(self.state_dict(), f"./Results/{self.folder_path}/{self.hyperparameters['setup']}-{self.epoch_count}.pt")
+            if self.hyperparameters['training']['save_at_each_epoch']:
+                torch.save(self.state_dict(), f"./Results/{self.folder_path}/{self.hyperparameters['training']['setup']}-{self.epoch_count}.pt")
 
 def save_results(acc_test,hyperparameters):
 
-    filename=f"{hyperparameters['detector_name']}-{hyperparameters['setup']}-{hyperparameters['precisions']}"
-    folder_path = f"{hyperparameters['setup']}-{hyperparameters['precisions']}"
+    filename=f"{hyperparameters['detector_name']}-{hyperparameters['training']['setup']}-{hyperparameters['precisions']}"
+    folder_path = f"{hyperparameters['training']['setup']}-{hyperparameters['precisions']}"
 
     description= f"""
 === FORGERY DETECTION TASK ===
-source : {hyperparameters['source_name']}
-target : {hyperparameters['target_name']}
+source : {hyperparameters['source']['name']}
+target : {hyperparameters['target']['name']}
     
 --- DATA ---
 source : random half images sampled from the "Splicing" category of the database DEFACTO
@@ -203,8 +201,8 @@ repartition : 1-1/{hyperparameters['N_fold']} 1/{hyperparameters['N_fold']}
 The preprocessing of the target images is the same as the one presented above
 
 --- TRAINING ---
-trainings_epochs on each fold : {hyperparameters['max_epochs']}
-hyperparameters_file : hyperparameters-{hyperparameters['setup']}-{hyperparameters['precisions']}.txt
+trainings_epochs on each fold : {hyperparameters['training']['max_epochs']}
+hyperparameters_file : hyperparameters-{hyperparameters['training']['setup']}-{hyperparameters['precisions']}.yaml
 
 --- RESULTS --- 
 
@@ -212,7 +210,7 @@ hyperparameters_file : hyperparameters-{hyperparameters['setup']}-{hyperparamete
 
     results="\n"
     for j in range(acc_test.shape[1]):
-        results+=f"{hyperparameters['domain_names'][j]} : {np.round(np.mean(acc_test[:,j]),3)*100}% +/- {np.round(np.std(acc_test[:,j]),2)*100}%"
+        results+=f"{hyperparameters['eval']['domain_names'][j]} : {np.round(np.mean(acc_test[:,j]),3)*100}% +/- {np.round(np.std(acc_test[:,j]),2)*100}%"
         results+="\n"
 
     with open(f"Results/{folder_path}/{filename}.txt", "w") as file:
@@ -221,27 +219,28 @@ hyperparameters_file : hyperparameters-{hyperparameters['setup']}-{hyperparamete
 
 def save_hyperparameters(hyperparameters):
 
-    folder_path = f"./Results/{hyperparameters['setup']}-{hyperparameters['precisions']}"
+    folder_path = f"./Results/{hyperparameters['training']['setup']}-{hyperparameters['precisions']}"
 
     if not os.path.isdir(folder_path):
         os.mkdir(folder_path)
 
-    file_path=f"{folder_path}/hyperparameters-{hyperparameters['setup']}-{hyperparameters['precisions']}.txt"
+    file_path=f"{folder_path}/hyperparameters-{hyperparameters['training']['setup']}-{hyperparameters['precisions']}.yaml"
 
  
-    dict_to_txt(hyperparameters,file_path)
+    with open(file_path, 'w') as file:
+       yaml.dump(hyperparameters, file,default_flow_style=False,sort_keys=False)
 
 
 def train_detector(hyperparameters,acc_targets_global,i,mix=None):
 
-    batch_size=hyperparameters['train_batch_size']
-    source_path=hyperparameters['source_path']
-    target_path=hyperparameters['target_path']
+    batch_size=hyperparameters['training']['batch_size']
+    source_path=hyperparameters['source']['filename']
+    target_path=hyperparameters['target']['filename']
 
     early_stop_callback = MyEarlyStopping(
         monitor='s_test',
         min_delta=0.00,
-        patience=hyperparameters['earlystop_patience'],
+        patience=hyperparameters['training']['earlystop_patience'],
         verbose=True,
         mode='max'
     )
@@ -255,7 +254,7 @@ def train_detector(hyperparameters,acc_targets_global,i,mix=None):
 
     seed_everything(hyperparameters['seed'])
   
-    if hyperparameters['setup']=='Mix':
+    if hyperparameters['training']['setup']=='Mix':
         mix_set=ConcatDataset([train_set_source,train_set_target])
         N_mix=len(mix_set)
         indices_mix = torch.randperm(len(mix_set))[0:N_mix//2]
@@ -268,11 +267,11 @@ def train_detector(hyperparameters,acc_targets_global,i,mix=None):
     else:
 
         N_target_train = len(train_set_target)
-        to_keep = min(N_target_train, hyperparameters['nb_target_max'])
+        to_keep = min(N_target_train, hyperparameters['target']['max_size'])
         indices_target = torch.randperm(len(train_set_target))[0:to_keep]
 
         N_source_train = len(train_set_source)
-        to_keep = min(N_source_train, hyperparameters['nb_source_max'])
+        to_keep = min(N_source_train, hyperparameters['source']['max_size'])
         indices_source = torch.randperm(len(train_set_source))[0:to_keep]
 
         source_train=  DataLoader(Subset(train_set_source, indices_source), batch_size=batch_size,shuffle=True)
@@ -282,29 +281,31 @@ def train_detector(hyperparameters,acc_targets_global,i,mix=None):
         target_test = DataLoader(test_set_target, batch_size=batch_size, shuffle=True)
 
     FD = ForgeryDetector(data=[source_train, source_test, target_train, target_test], hyperparameters=hyperparameters)
+    if not(i):
+        save_hyperparameters(FD.hyperparameters)
 
     if device=='cpu':
-        trainer = Trainer(max_epochs=hyperparameters['max_epochs'], progress_bar_refresh_rate=1,
+        trainer = Trainer(max_epochs=hyperparameters['training']['max_epochs'], progress_bar_refresh_rate=1,
                           callbacks=[early_stop_callback],
                           enable_checkpointing=False, logger=False, deterministic=True)
     else:
-        trainer = Trainer(gpus=torch.cuda.device_count(),max_epochs=hyperparameters['max_epochs'], progress_bar_refresh_rate=1,
+        trainer = Trainer(gpus=torch.cuda.device_count(),max_epochs=hyperparameters['training']['max_epochs'], progress_bar_refresh_rate=1,
                           callbacks=[early_stop_callback],
                           enable_checkpointing=False, logger=False, deterministic=True)
 
     trainer.fit(FD)
-    FD.load_state_dict(torch.load(f"./Results/{FD.folder_path}/{hyperparameters['setup']}-best_model.pt"))
-    torch.save(FD.state_dict(), f"./Results/{FD.folder_path}/{hyperparameters['setup']}-best_model_{i}.pt")
+    FD.load_state_dict(torch.load(f"./Results/{FD.folder_path}/{hyperparameters['training']['setup']}-best_model.pt"))
+    torch.save(FD.state_dict(), f"./Results/{FD.folder_path}/{hyperparameters['training']['setup']}-best_model_{i}.pt")
 
     acc_targets_local = []
 
     with torch.no_grad():
         FD.to(device)
 
-        for path in hyperparameters['domain_paths']:
+        for path in hyperparameters['eval']['domain_filenames']:
             eval_set = MyDataset(f'../Domains/Targets/{path}', key1=f'test_{i}', key2=f'l_test_{i}')
 
-            eval_loader = DataLoader(eval_set, batch_size=hyperparameters['eval_batch_size'], shuffle=True)
+            eval_loader = DataLoader(eval_set, batch_size=hyperparameters['eval']['batch_size'], shuffle=True)
 
             acc_targets_local.append(FD.compute_test_accuracy(eval_loader))
 
@@ -321,19 +322,18 @@ def train_detector(hyperparameters,acc_targets_global,i,mix=None):
     gc.collect()
     torch.cuda.empty_cache()
 
-def simulate(hyperparameters):
+def simulate(hyperparameters_config_path):
 
+    hyperparameters=initialize_hyperparameters(hyperparameters_config_path)
 
     acc_targets_global = []
-
-    save_hyperparameters(hyperparameters)
 
     for i in range(hyperparameters['N_fold']):
         print('********************')
         print(f"Fold {i + 1}/{hyperparameters['N_fold']}")
         print('********************  \n')
 
-        hyperparameters['save_at_each_epoch']=False if i>0 else hyperparameters['save_at_each_epoch']
+        hyperparameters['training']['save_at_each_epoch']=False if i>0 else hyperparameters['training']['save_at_each_epoch']
         train_detector(hyperparameters,acc_targets_global,i)
 
     acc_targets_global=np.array(acc_targets_global)
@@ -353,14 +353,14 @@ def retrieve_results(hyperparameters):
         print('********************')
         print(f"Fold {i + 1}/{hyperparameters['N_fold']}")
         print('********************  \n')
-        FD.load_state_dict(torch.load(f"./Results/{folder_path}/{hyperparameters['setup']}-best_model_{i}.pt"))
+        FD.load_state_dict(torch.load(f"./Results/{folder_path}/{hyperparameters['training']['setup']}-best_model_{i}.pt"))
 
         with torch.no_grad():
 
-            for path in hyperparameters['domain_paths']:
+            for path in hyperparameters['eval']['domain_filenames']:
                 eval_set = MyDataset(f'../Domains/Targets/{path}', key1=f'test_{i}', key2=f'l_test_{i}')
 
-                eval_loader = DataLoader(eval_set, batch_size=hyperparameters['eval_batch_size'], shuffle=True)
+                eval_loader = DataLoader(eval_set, batch_size=hyperparameters['eval']['batch_size'], shuffle=True)
 
                 acc_targets_local.append(FD.compute_test_accuracy(eval_loader))
 
@@ -372,14 +372,15 @@ def retrieve_results(hyperparameters):
 
     save_results(acc_targets_global, hyperparameters)
 
-code_to_experiment=txt_to_dict('code_to_experiment.txt')
+code_to_experiment=yaml.safe_load(Path('code_to_experiment.yaml').read_text())
 
 def reproduce(code):
-    code=str(code)
-    hyperparameters_path=f'./Results/{code_to_experiment[code]}/hyperparameters-{code_to_experiment[code]}.txt'
-    hyperparameters=txt_to_dict(hyperparameters_path)
-    simulate(hyperparameters)
+    hyperparameters_config_path=f'./Results/{code_to_experiment[code]}/hyperparameters-{code_to_experiment[code]}.yaml'
+    simulate(hyperparameters_config_path)
 
 if __name__ == "__main__":
-    for i in range(0,14):
-        reproduce(i)
+    reproduce(4)
+    #for i in range(0,14):
+    #     reproduce(i)
+
+#hyperparameters=initialize_hyperparameters(hyperparameters_config_path)

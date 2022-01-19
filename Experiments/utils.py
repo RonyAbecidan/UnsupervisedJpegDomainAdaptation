@@ -5,7 +5,8 @@ import pytorch_lightning as pl
 import torch
 from torch import nn
 import  torchvision.transforms as transforms
-import json
+import yaml
+from pathlib import Path
 
 import h5py as h5
 from torch.utils import data
@@ -39,45 +40,25 @@ class MyDataset(data.Dataset):
     def close(self):
         self.archive.close()
 
+default_config_path='default_config.yaml'
 
-def dict_to_txt(dictionary,path):
-    json.dump(dictionary, open(path,'w'))
-    print(f'Dictionary saved under the path {path}')
+def initialize_hyperparameters(my_config_path=default_config_path):
 
-def txt_to_dict(txt_path):
-    return json.load(open(txt_path))
+    hyperparameters=yaml.safe_load(Path(my_config_path).read_text())
+    hyperparameters['source']['name']=hyperparameters['source']['filename'][:-5].replace('source-','')
+    hyperparameters['target']['name']=hyperparameters['target']['filename'][:-5].replace('target-','')
+    hyperparameters['eval']['domain_names']=[domain[:-5].replace('target-','') for domain in hyperparameters['eval']['domain_filenames']]
+    
+    if ('s=' in hyperparameters['precisions']):
+        hyperparameters['precisions']=None
 
-def initialize_hyperparameters(source_path,target_path,eval_domains,details=None,save_at_each_epoch=True,setup='SrcOnly'):
-
-    hyperparameters={}
-    hyperparameters['seed']=2021
-    hyperparameters['N_fold']=3
-    hyperparameters['im_size']=128
-    hyperparameters['max_epochs']=30
-    hyperparameters['earlystop_patience']=5
-    hyperparameters['lr']=10**(-4)
-    hyperparameters['train_batch_size']=128
-    hyperparameters['eval_batch_size']=512
-    hyperparameters['detector_name']='Bayar'
-    hyperparameters['source_path']=source_path
-    hyperparameters['target_path']=target_path
-    hyperparameters['source_name']=source_path[:-5].replace('source-','')
-    hyperparameters['target_name']=target_path[:-5].replace('target-','')
-    hyperparameters['setup']=setup
-    hyperparameters['domain_paths']=eval_domains
-    hyperparameters['domain_names']=[domain[:-5].replace('target-','') for domain in eval_domains]
-    hyperparameters['nb_source_max']=10**(8)
-    hyperparameters['nb_target_max']=10**(8)
-    hyperparameters['save_at_each_epoch']=save_at_each_epoch
-
-    if details is None:
-        hyperparameters['precisions']=f"s={hyperparameters['source_name']}_t={hyperparameters['target_name']}"
+    if hyperparameters['precisions'] is None:
+        hyperparameters['precisions']=f"s={hyperparameters['source']['name']}_t={hyperparameters['target']['name']}"
     else:
-        hyperparameters['precisions']=f"s={hyperparameters['source_name']}_t={hyperparameters['target_name']}_{details}"
+        hyperparameters['precisions']=f"s={hyperparameters['source']['name']}_t={hyperparameters['target']['name']}_{hyperparameters['precisions']}"
 
     return hyperparameters
        
-
 
 def MMD(x, y, sigma=0.5):
     # Gaussian MMD

@@ -156,3 +156,6 @@ cython_debug/
 
 #saved weights pytorch
 *.pt
+
+#notepad++
+.bak

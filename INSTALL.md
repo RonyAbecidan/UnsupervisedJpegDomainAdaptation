@@ -45,15 +45,15 @@ Please find below a table linking a code to an experiment presented in the paper
 | Mix with Source=None and Target=QF(5)                                                                    | 12   |
 | Mix with Source=QF(100) and Target=QF(5)                                                                 | 13   |
 
-- If you want to make other experiments feel free to precise your hyperparameters using a dictionary like the one in `.\Results\SrcOnly-s=none_t=qf(5)\hyperparameters-SrcOnly-s=none_t=qf(5)` before calling the function `simulate(hyperparameters)`.
+- If you want to make other experiments feel free to precise your hyperparameters using a yaml config file like the one in `.\Experiments\example.yaml` before calling the function `simulate(hyperparameters_config_path)`.
 
 - Each experiment leads to the creation of a folder in `Experiments\Results` where the hyperparameters you gave, the weights of the best models found during the trainings and the final results are stored progressively. This folder has a name deduced 
-from the filenames of the source and the target. For instance SrcOnly(None --> QF(5)) leads to the construction of the folder `SrcOnly_s=none_t=qf(5)`. You can tweak a bit this name using the key `'details'` in the dictionary `hyperparameters`.
+from the filenames of the source and the target. For instance SrcOnly(None --> QF(5)) leads to the construction of the folder `SrcOnly_s=none_t=qf(5)`. You can add to this name some details about your experiment using the key `'precisions'` in the dictionary `hyperparameters`.
 
 - The name *hyperparameters* is in a broad sense since this dictionary should contain information such as learning rate, batch sizes, etc... but also the filenames (with extensions) of the bases you want to use as your source and your target. 
 
-- On top of that, you have the possibility to do the evaluation phase on several domains but you need to precise them in `hyperparameters['domain_paths']`. 
-  The function `initialize_hyperparameters` in `utils.py` can help. If you want to test the Update setup, please note that you need to precise the bandwiths used for each kernel in a list just like that `hyperparameters['sigmas']=[8,8,8]`.
+- On top of that, you have the possibility to do the evaluation phase on several domains but you need to precise their paths in the config file. 
+  If you want to test the Update setup, please note that you need to precise the bandwiths used for each kernel in a list with the key `sigmas` in the config file.
   
  In order to better realize how things work here you can have a look on the notebook [Demo.ipynb](./Experiments/Demo.ipynb)
  
@@ -102,14 +102,15 @@ from the filenames of the source and the target. For instance SrcOnly(None --> Q
 	├── Results/
 		├── SrcOnly-s=none_t=qf(5)
 			├── Bayar-SrcOnly-s=none_t=qf(5).txt
-			├── hyperparameters-SrcOnly-s=none_t=qf(5).txt
+			├── hyperparameters-SrcOnly-s=none_t=qf(5).yaml
 		├── .
 		├── .
 		├── .
 	├── Demo.ipynb 
 	├── utils.py
 	├── simulations.py
-	├── code_to_experiment.txt
+	├── code_to_experiment.yaml
+	├── example.yaml
 	
 └── Presentation/
 	├── Wifs2021_Presentation.pdf
