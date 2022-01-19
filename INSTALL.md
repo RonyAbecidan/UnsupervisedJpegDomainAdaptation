@@ -48,7 +48,7 @@ Please find below a table linking a code to an experiment presented in the paper
 - If you want to make other experiments feel free to precise your hyperparameters using a yaml config file like the one in `.\Experiments\example.yaml` before calling the function `simulate(hyperparameters_config_path)`.
 
 - Each experiment leads to the creation of a folder in `Experiments\Results` where the hyperparameters you gave, the weights of the best models found during the trainings and the final results are stored progressively. This folder has a name deduced 
-from the filenames of the source and the target. For instance SrcOnly(None --> QF(5)) leads to the construction of the folder `SrcOnly_s=none_t=qf(5)`. You can add to this name some details about your experiment using the key `'precisions'` in the dictionary `hyperparameters`.
+from the filenames of the source and the target. For instance SrcOnly(None --> QF(5)) leads to the construction of the folder `SrcOnly_s=none_t=qf(5)`. You can add to this name some details about your experiment using the key `'precisions'` in the config file.
 
 - The name *hyperparameters* is in a broad sense since this dictionary should contain information such as learning rate, batch sizes, etc... but also the filenames (with extensions) of the bases you want to use as your source and your target. 
 
