@@ -49,13 +49,11 @@ def initialize_hyperparameters(my_config_path=default_config_path):
     hyperparameters['target']['name']=hyperparameters['target']['filename'][:-5].replace('target-','')
     hyperparameters['eval']['domain_names']=[domain[:-5].replace('target-','') for domain in hyperparameters['eval']['domain_filenames']]
     
-    if ('s=' in hyperparameters['precisions']):
-        hyperparameters['precisions']=None
-
     if hyperparameters['precisions'] is None:
         hyperparameters['precisions']=f"s={hyperparameters['source']['name']}_t={hyperparameters['target']['name']}"
     else:
-        hyperparameters['precisions']=f"s={hyperparameters['source']['name']}_t={hyperparameters['target']['name']}_{hyperparameters['precisions']}"
+        if not ('s=' in hyperparameters['precisions']):
+            hyperparameters['precisions']=f"s={hyperparameters['source']['name']}_t={hyperparameters['target']['name']}_{hyperparameters['precisions']}"
 
     return hyperparameters
        
