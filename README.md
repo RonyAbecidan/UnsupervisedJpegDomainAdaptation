@@ -88,7 +88,8 @@ For more information about the modifications we performed and the reasons behind
 ```
 
 ---
-## <a name="CitingUJDA"></a>Citing our paper
+<a name="CitingUJDA"></a>
+## Citing our paper
 ### If you wish to refer to our paper,  please use the following BibTeX entry
 ```BibTeX
 @inproceedings{abecidan:hal-03374780,
