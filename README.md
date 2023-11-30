@@ -4,7 +4,7 @@
 ## Unsupervised JPEG Domain Adaptation for Practical Digital Image Forensics
 ### @[WIFS2021](https://wifs2021.lirmm.fr/) (Montpellier, France)
 ##### Rony Abecidan, Vincent Itier, Jeremie Boulanger, Patrick Bas
-[![](https://img.shields.io/badge/Bibtex-0C0C0C?style=for-the-badge)](#CitingUJDA)  [![](https://img.shields.io/badge/Article-2E86C1?style=for-the-badge)](https://hal.archives-ouvertes.fr/hal-03374780/)  [![](https://img.shields.io/badge/Website-239B56?style=for-the-badge)](https://ronyabecidan.github.io/UJDA/) [![](https://img.shields.io/badge/Presentation-F7DC6F?style=for-the-badge)](https://u.pcloud.link/publink/show?code=kZAtfNXZaKn5FuwW7Dz80kPTFgcEJFWFDJT7)
+[![](https://img.shields.io/badge/Bibtex-0C0C0C?style=for-the-badge)](#CitingUJDA)  [![](https://img.shields.io/badge/Article-2E86C1?style=for-the-badge)](https://hal.archives-ouvertes.fr/hal-03374780/)  [![](https://img.shields.io/badge/Website-239B56?style=for-the-badge)](https://ronyabecidan.github.io/UJDA/) [![](https://img.shields.io/badge/Presentation-F7DC6F?style=for-the-badge)](https://u.pcloud.link/publink/show?code=XZbzRNXZWgxe92jnbubXye31r56jq0xg0Eok)
 
 ![](https://svgshare.com/i/cX6.svg)
 
